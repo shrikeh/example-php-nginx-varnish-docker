@@ -1,0 +1,60 @@
+---
+version: "3.7"
+
+services:
+  nginx-frontend:
+    build:
+      context: ./
+      dockerfile: docker/nginx-frontend/Dockerfile
+    ports:
+      - 80:8080
+    volumes:
+      - ./dist:/dist:ro
+      - type: tmpfs
+        target: /var/cache/nginx
+      - type: tmpfs
+        target: /var/run/nginx
+    depends_on:
+      - backend-cache
+    networks:
+      - frontend_web
+  backend-cache:
+    build:
+      context: ./docker/backend-cache
+      dockerfile: Dockerfile
+    volumes:
+      - type: tmpfs
+        target: /var/lib/varnish:exec
+      - type: tmpfs
+        target: /usr/local/var/varnish:exec
+    expose:
+      - 80
+    networks:
+      - frontend_web
+      - backend_app
+    depends_on:
+      - nginx-backend
+  nginx-backend:
+    build:
+      context: ./
+      dockerfile: docker/nginx-backend/Dockerfile
+    volumes:
+      - socket:/socket
+    networks:
+      - backend_app
+    expose:
+      - 8081
+    depends_on:
+      - php-fpm
+  php-fpm:
+    build:
+      context: ./
+      dockerfile: docker/php-fpm/Dockerfile
+    volumes:
+      - ./app:/site/app:ro
+      - socket:/socket
+volumes:
+  socket:
+networks:
+  frontend_web:
+  backend_app:
