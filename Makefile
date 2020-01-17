@@ -6,6 +6,11 @@ ifndef VERBOSE
 .SILENT:
 endif
 
+run: init build up
+
+init:
+	test -e ./.env || cp -p ./.env.dist ./.env
+
 rebuild: prune build-clean up
 
 clean:
@@ -20,6 +25,9 @@ up:
 
 prune: down
 	docker volume prune -f
+
+build:
+	docker-compose build --parallel
 
 build-clean:
 	docker-compose build --no-cache --parallel

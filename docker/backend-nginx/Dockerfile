@@ -6,6 +6,7 @@ ARG BACKEND_NGINX_PORT=8081
 ARG APP_GROUP_NAME="app"
 ARG PHP_SOCKET_DIR="/socket"
 ARG PHP_SOCKET_FILE="app.sock"
+ARG APP_CODE_DIR=/site/app
 
 WORKDIR /build
 # Copy the templates to the /build dir
@@ -24,7 +25,7 @@ ARG APP_GROUP_NAME="app"
 
 WORKDIR /etc/nginx
 
-COPY --from=backend-build-nginx /etc/nginx/ .
+COPY --from=backend-nginx-build /etc/nginx/ .
 
 RUN addgroup --system --gid ${APP_GROUP_ID} "${APP_GROUP_NAME}"
 RUN addgroup nginx ${APP_GROUP_NAME}
