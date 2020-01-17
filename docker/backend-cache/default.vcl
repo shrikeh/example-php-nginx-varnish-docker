@@ -1,6 +1,7 @@
+# simple VCL example
 vcl 4.1;
 
 backend default {
-  .host = "nginx-backend";
-  .port = "8081";
+  .host = "backend-nginx";
+  .port = "{{ .Env.BACKEND_NGINX_PORT }}";
 }

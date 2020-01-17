@@ -1,3 +1,3 @@
 <?php
-
-echo 'Hello world!' . time();
+declare(strict_types=1;)
+echo time();

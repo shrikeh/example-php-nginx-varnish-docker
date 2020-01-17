@@ -1,13 +1,15 @@
 ---
 version: "3.7"
-
 services:
-  nginx-frontend:
+  frontend-nginx:
     build:
       context: ./
-      dockerfile: docker/nginx-frontend/Dockerfile
+      dockerfile: docker/frontend-nginx/Dockerfile
+      args:
+        FRONTEND_NGINX_PORT: ${FRONTEND_NGINX_PORT:-8080}
+        BACKEND_CACHE_PORT: ${BACKEND_CACHE_PORT:80}
     ports:
-      - 80:8080
+      - 80:${FRONTEND_NGINX_PORT:-8080}
     volumes:
       - ./dist:/dist:ro
       - type: tmpfs
@@ -28,31 +30,41 @@ services:
       - type: tmpfs
         target: /usr/local/var/varnish:exec
     expose:
-      - 80
+      - ${BACKEND_CACHE_PORT:-80}
     networks:
       - frontend_web
       - backend_app
     depends_on:
-      - nginx-backend
-  nginx-backend:
+      - backend-nginx
+  backend-nginx:
     build:
       context: ./
-      dockerfile: docker/nginx-backend/Dockerfile
+      dockerfile: docker/backend-nginx/Dockerfile
+      args:
+        APP_GROUP_NAME: ${APP_GROUP_NAME:-app}
+        APP_GROUP_ID: ${APP_GROUP_ID:-2001}
+        PHP_SOCKET_DIR: ${PHP_SOCKET_DIR:-/socket}
+        PHP_SOCKET_FILE: ${PHP_SOCKET_FILE:-app.sock}
     volumes:
-      - socket:/socket
+      - socket:${PHP_SOCKET_DIR:-/socket}
     networks:
       - backend_app
     expose:
-      - 8081
+      - ${BACKEND_NGINX_PORT:-8081}
     depends_on:
       - php-fpm
   php-fpm:
     build:
       context: ./
       dockerfile: docker/php-fpm/Dockerfile
+      args:
+        APP_GROUP_NAME: ${APP_GROUP_NAME:-app}
+        APP_GROUP_ID: ${APP_GROUP_ID:-2001}
+        PHP_SOCKET_DIR: ${PHP_SOCKET_DIR:-/socket}
+        PHP_SOCKET_FILE: ${PHP_SOCKET_FILE:-app.sock}
     volumes:
       - ./app:/site/app:ro
-      - socket:/socket
+      - socket:${PHP_SOCKET_DIR:-/socket}
 volumes:
   socket:
 networks:
